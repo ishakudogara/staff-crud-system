@@ -197,11 +197,11 @@ import UpdateStaff from "./pages/UpdateStaff";
 function App() {
   return (
     <BrowserRouter>
-      <div className='App'>
+      <div className="App">
         <Routes>
-          <Route exact path='/' element={<Staff />} />
-          <Route path='/AddStaff' element={<AddStaff />} />
-          <Route path='/UpdateStaff/:id' element={<UpdateStaff />} />
+          <Route exact path="/" element={<Staff />} />
+          <Route path="/AddStaff" element={<AddStaff />} />
+          <Route path="/UpdateStaff/:id" element={<UpdateStaff />} />
         </Routes>
       </div>
     </BrowserRouter>
@@ -320,7 +320,7 @@ Updating our records.
 
 ```javascript
 <Link to={`/UpdateStaff/${item.id}`}>
-  <button className='btn btn-edit'>Update</button>
+  <button className="btn btn-edit">Update</button>
 </Link>
 ```
 
@@ -332,7 +332,7 @@ by the `$` accessor nd encapsulated in back-ticks, otherwise template literals. 
 Deleting records
 
 ```javascript
-<button className='btn btn-delete' onClick={() => DeleteStaff(item.id)}>
+<button className="btn btn-delete" onClick={() => DeleteStaff(item.id)}>
   Delete
 </button>
 ```
@@ -406,3 +406,146 @@ We employ the `put` method to the specific id fused into the URL.
 Building our sever and client for deployment and dockerization of our application.
 
 <img src="image/arch.jp">
+
+Step 23
+Create a production and development branch
+
+Step 24
+In your terminal, run
+
+git branch
+If you see just one branch run
+
+git branch -a
+Shows all branches. Now to switch to the production branch we intend to deploy:
+
+run
+
+git checkout master
+To know the branch you are on. Now run
+
+git checkout -b <branch>
+The -b flag stands for branch
+
+Once that is done, you can proceed to dockerizing the application.
+
+Step 26
+Create a .dockerfile-front-end. You can do this on Linux/Unix or through the terminal using the touch command. That is:
+
+touch .dockerfile.front-end
+Or just create manually.
+
+Step 27
+Open up the docker file and add the following FOR OUR FRONTEND:
+
+FROM node:16
+So our image would use a minimum of node js, version 16.
+
+Define our Working Directory
+
+WORKDIR /back-end
+Copy the package.json in the backend, and front-end This command goes to the local host machine and copies the package.json files that include the dependencies to our image.
+
+COPY ./package.json ./package.json
+COPY ./public ./public
+Then copy the source folder.
+
+COPY ./src ./src
+Run Yarn Install to install the dependencies
+
+RUN yarn install
+Expose the Docker PORT
+
+Then you have to Run Yarn Start using Docker's CMD command:
+
+CMD ["yarn", "start"]
+Step 28
+Dockerize the Nodejs app, by creating a dockerfile for it as above.
+
+Then what you should have is:
+
+FROM node:16
+WORKDIR /back-end
+COPY ./package.json ./package.json
+COPY ./index. js ./index.js
+RUN npm install
+EXPOSE 9000
+CMD ["node", "index.js"]
+Step 29
+You can use the Docker extension GUI. Type Control + Shift + P
+
+Just follow the instructions for nodejs
+
+Step 30
+Before building the image, configure your nodejs for production. Create an .env file.
+
+Once you have created that, set up a .gitignore file and add these:
+
+env
+.enc
+node_modules
+Then uninstall nodemon
+
+Step 31
+Install dotenv using:
+
+npm install dotenv
+Then append the import to index.js
+
+require("dotenv");
+Set up a docker-compose using this sample configuration below
+
+version: "3.4"
+
+services:
+backend:
+depends_on: - mysqldb
+image: backend
+build:
+context: back-end
+dockerfile: ./Dockerfile
+environment: - DB_HOST=mysqldb - DB_USER=$MYSQLDB_USER
+      - DB_PASSWORD=$MYSQLDB_ROOT_PASSWORD - DB_NAME=$MYSQLDB_DATABASE
+      - DB_PORT=$MYSQLDB_DOCKER_PORT
+stdin_open: true
+tty: true
+ports: - 9000:9000
+frontend:
+image: frontend
+build:
+context: front-end
+dockerfile: ./Dockerfile
+environment:
+NODE_ENV: production
+ports: - 9000:9000d
+mysqldb:
+image: mysql:8.0
+restart: unless-stopped
+env_file: ./.env
+environment: - MYSQL_ROOT_PASSWORD=$MYSQLDB_ROOT_PASSWORD
+      - MYSQL_DATABASE=$MYSQLDB_DATABASE
+ports: - $MYSQLDB_LOCAL_PORT:$MYSQLDB_DOCKER_PORT
+volumes: - db:/var/lib/mysql
+volumes:
+db:
+To build your dockerfile. Run:
+
+docker-compose -f docker/docker-compose.yml up -d
+This triggers the docker-engine to spin up containers for the image.
+
+docker-compose up
+
+# Deployment
+
+In the directory where you want to run your server on apache, run:
+```
+docker run -p 5000:5000 --rm backend
+```
+This starts the front-end
+```
+docker run -p 3000:3000 --rm frontend
+```
+This starts the database
+```
+docker run -p 5000:5000 mysql:8.0
+```
